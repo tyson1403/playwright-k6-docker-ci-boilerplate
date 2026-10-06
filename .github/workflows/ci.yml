@@ -56,8 +56,9 @@ jobs:
             test-results/
           retention-days: 14
 
-  # Builds the real container image, then runs k6 against it: the smoke journey
-  # plus the oversell (concurrency) check. Full load tests run in perf.yml.
+  # Builds the real container image, then runs k6 against it (the smoke journey
+  # plus the oversell concurrency check) and checks the database survives a restart.
+  # Full load tests run in perf.yml.
   performance-smoke:
     name: Docker build + k6 smoke
     needs: unit
@@ -71,6 +72,16 @@ jobs:
         run: docker compose --profile perf run --rm k6 run --summary-export /results/smoke-summary.json /scripts/scenarios/smoke.js
       - name: k6 oversell (concurrency)
         run: docker compose --profile perf run --rm -e K6_WEB_DASHBOARD_EXPORT=/results/oversell-report.html k6 run /scripts/scenarios/oversell.js
+      - name: Accounts persist across an app restart (SQLite volume)
+        run: |
+          EMAIL="persist.$(date +%s)@example.com"
+          BODY="{\"email\":\"$EMAIL\",\"password\":\"Secur3Pass\",\"firstName\":\"Persist\",\"lastName\":\"Check\"}"
+          curl -sf -X POST localhost:3000/api/auth/register -H 'Content-Type: application/json' -d "$BODY" > /dev/null
+          docker compose restart app
+          for i in $(seq 1 30); do curl -sf localhost:3000/api/health > /dev/null && break; sleep 1; done
+          curl -sf -X POST localhost:3000/api/auth/login -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$EMAIL\",\"password\":\"Secur3Pass\"}" > /dev/null
+          echo "Registered user can still log in after the container restarted"
       - name: App logs
         if: failure()
         run: docker compose logs app

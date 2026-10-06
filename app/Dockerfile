@@ -1,7 +1,8 @@
 FROM node:24-alpine
 
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=3000 \
+    DB_PATH=/app/data/skylane.db
 WORKDIR /app
 
 # Install dependencies first so this layer is cached when only source changes.
@@ -10,6 +11,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY src ./src
 COPY public ./public
+# The SQLite database lives here; mount a volume to keep accounts across restarts.
+RUN mkdir -p /app/data && chown node:node /app/data
+VOLUME /app/data
 
 USER node
 EXPOSE 3000

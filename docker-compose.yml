@@ -8,8 +8,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      ENABLE_TEST_API: "true" # test hooks (reset, inventory); never enable in production
+      ENABLE_TEST_API: "true" # test hooks (reset, inventory, sessions); never enable in production
       LOG_REQUESTS: "false"
+      # Account security policy (these are the defaults)
+      LOCKOUT_THRESHOLD: "5"
+      LOCKOUT_MINUTES: "15"
+      SESSION_IDLE_MINUTES: "15"
+      SESSION_ABSOLUTE_HOURS: "8"
+    volumes:
+      - skylane-data:/app/data # SQLite database: accounts survive container restarts
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 5s
@@ -45,3 +52,6 @@ services:
     volumes:
       - ./k6:/scripts:ro
       - ./k6-results:/results
+
+volumes:
+  skylane-data:
