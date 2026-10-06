@@ -22,8 +22,8 @@ form.addEventListener('submit', async (event) => {
     password: $('#password').value,
   };
   try {
-    const { token, user } = await api('/auth/register', { method: 'POST', body });
-    setSession({ token, user });
+    const { user, ...session } = await api('/auth/register', { method: 'POST', body });
+    setSession({ user, ...session });
     location.href = '/trips';
   } catch (err) {
     showApiError(form, alertEl, err);

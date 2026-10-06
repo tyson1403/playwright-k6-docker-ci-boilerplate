@@ -26,6 +26,13 @@ export function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
+/** Sends the customer to log in again, then back to where they were. */
+export function redirectToLogin(reason) {
+  if (location.pathname === '/login') return;
+  const next = `${location.pathname}${location.search}`;
+  location.href = `/login?${new URLSearchParams({ reason, next })}`;
+}
+
 export async function api(path, { method = 'GET', body, headers = {} } = {}) {
   const session = getSession();
   const res = await fetch(`/api${path}`, {
@@ -39,8 +46,13 @@ export async function api(path, { method = 'GET', body, headers = {} } = {}) {
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 401 && session) clearSession();
-    throw new ApiRequestError(res.status, data);
+    const error = new ApiRequestError(res.status, data);
+    // A logged-in request was rejected: the session timed out or was revoked.
+    if (res.status === 401 && session) {
+      clearSession();
+      redirectToLogin('expired');
+    }
+    throw error;
   }
   return data;
 }
@@ -77,15 +89,126 @@ export function renderHeader(activePage) {
       <nav class="site-nav" aria-label="Main">${links}${account}</nav>
     </div>`;
 
-  $('#logout-button')?.addEventListener('click', async () => {
-    try {
-      await api('/auth/logout', { method: 'POST' });
-    } catch {
-      /* session may already be gone */
-    }
+  $('#logout-button')?.addEventListener('click', () => logout('/'));
+  if (session) watchSession(session, activePage);
+}
+
+export async function logout(destination) {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: `Bearer ${getSession()?.token}` } });
+  } catch {
+    /* the session may already be gone on the server */
+  }
+  clearSession();
+  location.href = destination;
+}
+
+// ---------- session timeout ----------
+// The server ends a session after a period of inactivity (sliding) and after an
+// absolute lifetime. The browser mirrors that: activity sends a keep-alive, a
+// warning appears shortly before the idle limit, and the customer is signed out
+// when it is reached.
+const WARNING_MS = 60_000;
+const KEEPALIVE_MS = 30_000;
+
+let watching = false;
+
+async function watchSession(session, activePage) {
+  if (watching) return;
+  watching = true;
+
+  // Confirm the session is still valid (this also counts as activity on the server).
+  const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${session.token}` } }).catch(() => null);
+  if (res?.status === 401) {
     clearSession();
-    location.href = '/';
+    renderHeader(activePage);
+    showSessionNotice('Your session has expired. Please log in again.');
+    return;
+  }
+  if (res?.ok) {
+    const { session: times } = await res.json();
+    session = { ...session, ...times };
+    setSession(session);
+  }
+
+  const idleMs = (session.idleTimeoutSeconds || 900) * 1000;
+  const absoluteEnd = session.expiresAt ? Date.parse(session.expiresAt) : Infinity;
+  let lastActivity = Date.now();
+  let lastKeepAlive = Date.now();
+  const dialog = sessionDialog();
+
+  const keepAlive = () => {
+    lastKeepAlive = Date.now();
+    return api('/auth/me');
+  };
+
+  const onActivity = () => {
+    if (dialog.open) return; // while warned, only "Stay signed in" extends the session
+    lastActivity = Date.now();
+    if (Date.now() - lastKeepAlive > KEEPALIVE_MS) keepAlive().catch(() => {});
+  };
+  for (const type of ['click', 'keydown', 'scroll', 'touchstart']) addEventListener(type, onActivity, { passive: true });
+
+  $('#stay-signed-in', dialog).addEventListener('click', async () => {
+    try {
+      await keepAlive();
+      lastActivity = Date.now();
+      dialog.close();
+    } catch {
+      /* api() redirects to login if the session already expired */
+    }
   });
+  $('#session-logout', dialog).addEventListener('click', () => logout('/'));
+
+  const timer = setInterval(() => {
+    const now = Date.now();
+    const deadline = Math.min(lastActivity + idleMs, absoluteEnd);
+    const remaining = deadline - now;
+    if (remaining <= 0) {
+      clearInterval(timer);
+      const reason = now >= absoluteEnd ? 'expired' : 'idle';
+      logout(`/login?${new URLSearchParams({ reason, next: `${location.pathname}${location.search}` })}`);
+      return;
+    }
+    if (remaining <= WARNING_MS) {
+      $('#session-countdown', dialog).textContent = String(Math.ceil(remaining / 1000));
+      if (!dialog.open) dialog.showModal();
+    }
+  }, 1000);
+  document.body.dataset.sessionWatch = 'active'; // lets tests know the timer is running
+}
+
+function sessionDialog() {
+  let dialog = $('#session-dialog');
+  if (dialog) return dialog;
+  dialog = document.createElement('dialog');
+  dialog.id = 'session-dialog';
+  dialog.dataset.testid = 'session-dialog';
+  dialog.setAttribute('aria-labelledby', 'session-dialog-title');
+  dialog.setAttribute('aria-describedby', 'session-dialog-text');
+  dialog.innerHTML = `
+    <h2 id="session-dialog-title">Are you still there?</h2>
+    <p id="session-dialog-text">For your security, you will be signed out in
+      <strong><span id="session-countdown" data-testid="session-countdown">60</span> seconds</strong> due to inactivity.</p>
+    <div class="actions">
+      <button class="btn" type="button" id="stay-signed-in" data-testid="stay-signed-in">Stay signed in</button>
+      <button class="btn btn-secondary" type="button" id="session-logout" data-testid="session-logout">Log out now</button>
+    </div>`;
+  // Escape would otherwise close the dialog without extending the session.
+  dialog.addEventListener('cancel', (e) => e.preventDefault());
+  document.body.append(dialog);
+  return dialog;
+}
+
+function showSessionNotice(message) {
+  const main = $('main');
+  if (!main || $('[data-testid="session-notice"]')) return;
+  const notice = document.createElement('div');
+  notice.className = 'alert alert-info';
+  notice.setAttribute('role', 'status');
+  notice.dataset.testid = 'session-notice';
+  notice.innerHTML = `${escapeHtml(message)} <a href="/login?next=${encodeURIComponent(location.pathname + location.search)}">Log in</a>`;
+  main.prepend(notice);
 }
 
 // ---------- formatting ----------

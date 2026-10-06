@@ -19,6 +19,7 @@ test.describe('My trips', () => {
       localStorage.setItem('skylane.session', JSON.stringify({ token: 'expired-token', user: { firstName: 'Ghost' } })),
     );
     await page.goto('/trips');
-    await expect(page).toHaveURL('/login?next=/trips');
+    await expect(page).toHaveURL('/login?reason=expired&next=%2Ftrips');
+    await expect(page.getByTestId('login-alert')).toHaveText('Your session has expired. Please log in again.');
   });
 });

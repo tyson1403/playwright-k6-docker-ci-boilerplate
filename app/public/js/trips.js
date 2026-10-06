@@ -19,10 +19,7 @@ async function init() {
     const cards = await Promise.all(bookings.map(bookingSummaryHtml));
     container.innerHTML = cards.join('');
   } catch (err) {
-    if (err.status === 401) {
-      location.href = '/login?next=/trips';
-      return;
-    }
+    if (err.status === 401) return; // api() is already sending the customer to log in
     container.innerHTML = `<div class="alert alert-error" role="alert">${escapeHtml(err.message)}</div>`;
   }
 }

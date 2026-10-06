@@ -9,6 +9,12 @@ $('#login-fields').innerHTML =
   fieldHtml({ id: 'email', label: 'Email', field: 'email', type: 'email', attrs: 'autocomplete="email"' }) +
   fieldHtml({ id: 'password', label: 'Password', field: 'password', type: 'password', attrs: 'autocomplete="current-password"' });
 
+const REASONS = {
+  idle: 'For your security, you were signed out after a period of inactivity. Please log in again.',
+  expired: 'Your session has expired. Please log in again.',
+};
+if (REASONS[params.get('reason')]) showAlert(alertEl, REASONS[params.get('reason')], 'info');
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   clearErrors(form);
@@ -20,8 +26,8 @@ form.addEventListener('submit', async (event) => {
   if (!email || !password) return;
 
   try {
-    const { token, user } = await api('/auth/login', { method: 'POST', body: { email, password } });
-    setSession({ token, user });
+    const { user, ...session } = await api('/auth/login', { method: 'POST', body: { email, password } });
+    setSession({ user, ...session });
     const next = params.get('next');
     location.href = next && next.startsWith('/') && !next.startsWith('//') ? next : '/trips';
   } catch (err) {
