@@ -132,3 +132,26 @@ docs/test-plan.md         test strategy and test case catalogue
 - **Security details.** Passwords are salted scrypt hashes and session tokens are stored only as SHA-256 hashes, so a leaked database can't be used to log in. Unknown emails are never locked and take as long to reject as a wrong password. An expired token is refused rather than silently treated as a guest.
 - **Performance SLOs as code.** Per-endpoint p95 thresholds in `k6/lib/config.js` fail the build when they are breached. The load mix models real traffic: about 60% browse, 25% book, 10% manage, 5% check-in.
 
+## Roadmap
+
+This project is in active development.
+
+**Done**
+
+- Airline app: search, fares, booking and payment, manage and cancel, online check-in, accounts
+- Playwright API, UI, hybrid and accessibility suites; unit and integration tests
+- k6 smoke, load, stress, spike and oversell scenarios with SLO thresholds
+- Docker Compose and GitHub Actions (every push, plus nightly performance runs)
+- Accounts in SQLite, login lockout, and idle and absolute session timeouts
+
+**Next**
+
+- [ ] Forgot-password flow: single-use, time-limited reset tokens; a test mailbox to capture reset emails; rate limiting; signing out every session after a password change
+- [ ] Move bookings from memory to SQLite, so the whole app survives restarts
+- [ ] API contract tests against an OpenAPI specification
+- [ ] Firefox and WebKit projects in CI
+- [ ] k6 results in InfluxDB and Grafana, to track performance trends across runs
+
+## License
+
+[MIT](LICENSE)
