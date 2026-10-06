@@ -31,6 +31,8 @@ export const ROUTES = {
   manage: { origin: 'DXB', destination: 'KWI' },
   checkin: { origin: 'DXB', destination: 'BAH' },
   checkinUi: { origin: 'DXB', destination: 'RUH' },
+  // One flight per browser project, so desktop and mobile runs never compete for seats.
+  checkinFamily: { chromium: { origin: 'DXB', destination: 'COK' }, 'mobile-chrome': { origin: 'DXB', destination: 'KTM' } },
   trips: { origin: 'DXB', destination: 'JED' },
   inventory: { origin: 'DXB', destination: 'TBS' },
   inbound: { origin: 'IST', destination: 'DXB' },

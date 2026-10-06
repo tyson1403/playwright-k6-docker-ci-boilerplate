@@ -3,8 +3,9 @@ import { ROUTES, party, passenger } from '../utils/test-data';
 import type { Booking } from '../utils/skylane-api';
 
 test.describe('Online check-in', () => {
-  test('family checks in, picks seats and gets boarding passes @smoke', async ({ api, checkin }) => {
-    const created = await api.book({ route: ROUTES.checkinUi, passengers: party(3) });
+  test('family checks in, picks seats and gets boarding passes @smoke', async ({ api, checkin }, testInfo) => {
+    const route = ROUTES.checkinFamily[testInfo.project.name as keyof typeof ROUTES.checkinFamily];
+    const created = await api.book({ route, passengers: party(3) });
 
     await checkin.goto();
     await checkin.start(created.pnr, created.passengers[0].lastName);
