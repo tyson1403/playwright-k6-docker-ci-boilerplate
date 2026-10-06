@@ -1,0 +1,19 @@
+{
+  "name": "skylane-air",
+  "version": "1.0.0",
+  "description": "SkyLane Air - a demo airline booking app (fictional) used as a system under test",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Passenger details | SkyLane Air</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/book.js"></script>
+</head>
+<body data-page="home">
+  <header class="site-header"></header>
+  <main id="main" class="container">
+    <h1>Passenger details &amp; payment</h1>
+    <div id="book-alert" class="hidden" data-testid="book-alert"></div>
+    <div class="layout-2col">
+      <form id="booking-form" novalidate data-testid="booking-form">
+        <section class="card">
+          <h2>Passengers</h2>
+          <div id="passenger-fields"></div>
+        </section>
+        <section class="card">
+          <h2>Contact details</h2>
+          <div class="form-grid" id="contact-fields"></div>
+        </section>
+        <section class="card">
+          <h2>Extras</h2>
+          <label class="checkbox"><input type="checkbox" id="extra-bag" data-testid="extra-bag" /> Add 10kg extra baggage per passenger (<span id="extra-bag-price"></span>)</label>
+        </section>
+        <section class="card">
+          <h2>Payment</h2>
+          <p class="flight-meta">Demo payments only. Use card 4111 1111 1111 1111, any future expiry and any 3-digit CVV.</p>
+          <div class="form-grid" id="payment-fields"></div>
+          <div class="actions">
+            <button class="btn" type="submit" id="pay-button" data-testid="pay-button">Pay and book</button>
+          </div>
+        </section>
+      </form>
+      <aside class="card summary" aria-labelledby="summary-title" data-testid="price-summary">
+        <h2 id="summary-title">Your trip</h2>
+        <div id="trip-summary" data-testid="trip-summary"></div>
+        <dl id="price-lines"></dl>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer">SkyLane Air is a fictional airline built as a test automation demo. No real bookings are made.</footer>
+</body>
+</html>

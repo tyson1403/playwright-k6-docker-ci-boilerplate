@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book flights | SkyLane Air</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/index.js"></script>
+</head>
+<body data-page="home">
+  <header class="site-header"></header>
+  <section class="hero">
+    <div class="container">
+      <h1>Where to next?</h1>
+      <p>Low fares across the Gulf, the Indian subcontinent and beyond, all via our Dubai hub.</p>
+    </div>
+  </section>
+  <main id="main" class="container">
+    <section class="card" aria-labelledby="search-title">
+      <h2 id="search-title">Search flights</h2>
+      <div id="search-alert" class="hidden" data-testid="search-alert"></div>
+      <form id="search-form" novalidate data-testid="search-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="origin">From</label>
+            <select id="origin" name="origin" data-field="origin" data-testid="origin" aria-describedby="origin-error" required></select>
+            <span class="field-error" id="origin-error" data-testid="origin-error"></span>
+          </div>
+          <div class="field">
+            <label for="destination">To</label>
+            <select id="destination" name="destination" data-field="destination" data-testid="destination" aria-describedby="destination-error" required></select>
+            <span class="field-error" id="destination-error" data-testid="destination-error"></span>
+          </div>
+          <div class="field">
+            <label for="date">Departure date</label>
+            <input id="date" name="date" type="date" data-field="date" data-testid="date" aria-describedby="date-error" required />
+            <span class="field-error" id="date-error" data-testid="date-error"></span>
+          </div>
+          <div class="field">
+            <label for="passengers">Passengers</label>
+            <select id="passengers" name="passengers" data-field="passengers" data-testid="passengers" aria-describedby="passengers-error"></select>
+            <span class="field-error" id="passengers-error" data-testid="passengers-error"></span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" type="submit" data-testid="search-button">Search flights</button>
+        </div>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Travel with confidence</h2>
+      <p>Choose the fare that fits: <strong>Saver</strong> for cabin-bag trips, <strong>Standard</strong> with 20kg checked baggage, or <strong>Flex</strong> with free cancellation. Online check-in opens 48 hours before departure.</p>
+    </section>
+  </main>
+  <footer class="site-footer">SkyLane Air is a fictional airline built as a test automation demo. No real bookings are made.</footer>
+</body>
+</html>

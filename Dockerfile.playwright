@@ -1,0 +1,16 @@
+# Test runner image. The tag must match the @playwright/test version in package.json,
+# so the bundled browsers are the ones the test runner expects.
+FROM mcr.microsoft.com/playwright:v1.63.0-noble
+
+WORKDIR /tests
+ENV CI=true
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY tsconfig.json playwright.config.ts ./
+COPY tests ./tests
+
+# BASE_URL points at the app container, which also turns off Playwright's own webServer.
+ENV BASE_URL=http://app:3000
+ENTRYPOINT ["npx", "playwright", "test"]

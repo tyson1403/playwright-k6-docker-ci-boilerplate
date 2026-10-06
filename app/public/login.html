@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Log in | SkyLane Air</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/login.js"></script>
+</head>
+<body data-page="login">
+  <header class="site-header"></header>
+  <main id="main" class="container narrow">
+    <section class="card">
+      <h1>Log in</h1>
+      <div id="login-alert" class="hidden" data-testid="login-alert"></div>
+      <form id="login-form" novalidate data-testid="login-form">
+        <div id="login-fields"></div>
+        <div class="actions"><button class="btn" type="submit" data-testid="login-button">Log in</button></div>
+      </form>
+      <p>New to SkyLane? <a href="/register">Create an account</a></p>
+    </section>
+  </main>
+  <footer class="site-footer">SkyLane Air is a fictional airline built as a test automation demo. No real bookings are made.</footer>
+</body>
+</html>

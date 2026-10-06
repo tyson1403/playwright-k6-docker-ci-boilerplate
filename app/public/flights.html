@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Select your flight | SkyLane Air</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/flights.js"></script>
+</head>
+<body data-page="home">
+  <header class="site-header"></header>
+  <main id="main" class="container">
+    <section class="card route-summary">
+      <div>
+        <h1 id="route-title" data-testid="route-title">Select your flight</h1>
+        <div id="route-subtitle" class="flight-meta" data-testid="route-subtitle"></div>
+      </div>
+      <a class="btn btn-secondary" href="/" data-testid="modify-search">Modify search</a>
+    </section>
+    <div id="results-alert" class="hidden" data-testid="results-alert"></div>
+    <div id="results" data-testid="results" aria-live="polite"><p class="spinner">Searching flights...</p></div>
+  </main>
+  <footer class="site-footer">SkyLane Air is a fictional airline built as a test automation demo. No real bookings are made.</footer>
+</body>
+</html>

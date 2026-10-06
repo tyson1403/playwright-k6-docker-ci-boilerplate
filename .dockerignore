@@ -1,0 +1,10 @@
+**/node_modules
+.git
+.github
+playwright-report
+test-results
+k6-results
+app
+k6
+docs
+*.md

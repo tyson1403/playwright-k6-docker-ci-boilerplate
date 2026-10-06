@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Online check-in | SkyLane Air</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/checkin.js"></script>
+</head>
+<body data-page="checkin">
+  <header class="site-header"></header>
+  <main id="main" class="container">
+    <h1>Online check-in</h1>
+    <section class="card" id="checkin-retrieve-card">
+      <p class="flight-meta">Check-in opens 48 hours and closes 60 minutes before departure.</p>
+      <div id="checkin-alert" class="hidden" data-testid="checkin-alert"></div>
+      <form id="checkin-form" novalidate data-testid="checkin-form">
+        <div class="form-grid" id="checkin-fields"></div>
+        <div class="actions"><button class="btn" type="submit" data-testid="checkin-start-button">Start check-in</button></div>
+      </form>
+    </section>
+    <div id="checkin-step" data-testid="checkin-step"></div>
+  </main>
+  <footer class="site-footer">SkyLane Air is a fictional airline built as a test automation demo. No real bookings are made.</footer>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "skylane-air-quality",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright + k6 test suite for the SkyLane Air demo airline app, with Docker and CI",
+  "scripts": {
+    "app:install": "npm --prefix app ci",
+    "app:start": "npm --prefix app start",
+    "test:unit": "npm --prefix app test",
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "test:e2e": "playwright test --project=chromium --project=mobile-chrome",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:headed": "playwright test --project=chromium --headed",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "k6:smoke": "docker compose --profile perf run --rm k6 run /scripts/scenarios/smoke.js",
+    "k6:load": "docker compose --profile perf run --rm k6 run /scripts/scenarios/load.js",
+    "k6:stress": "docker compose --profile perf run --rm k6 run /scripts/scenarios/stress.js",
+    "k6:spike": "docker compose --profile perf run --rm k6 run /scripts/scenarios/spike.js",
+    "k6:oversell": "docker compose --profile perf run --rm k6 run /scripts/scenarios/oversell.js",
+    "docker:up": "docker compose up -d --build --wait app",
+    "docker:down": "docker compose down",
+    "docker:test": "docker compose --profile test run --rm playwright"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  }
+}

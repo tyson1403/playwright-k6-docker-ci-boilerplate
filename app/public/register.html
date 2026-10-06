@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create account | SkyLane Air</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/register.js"></script>
+</head>
+<body data-page="register">
+  <header class="site-header"></header>
+  <main id="main" class="container narrow">
+    <section class="card">
+      <h1>Create your account</h1>
+      <div id="register-alert" class="hidden" data-testid="register-alert"></div>
+      <form id="register-form" novalidate data-testid="register-form">
+        <div class="form-grid" id="register-fields"></div>
+        <div class="actions"><button class="btn" type="submit" data-testid="register-button">Create account</button></div>
+      </form>
+      <p>Already have an account? <a href="/login">Log in</a></p>
+    </section>
+  </main>
+  <footer class="site-footer">SkyLane Air is a fictional airline built as a test automation demo. No real bookings are made.</footer>
+</body>
+</html>

@@ -1,0 +1,47 @@
+name: skylane
+
+services:
+  # System under test.
+  app:
+    build: ./app
+    image: skylane-air:local
+    ports:
+      - "3000:3000"
+    environment:
+      ENABLE_TEST_API: "true" # test hooks (reset, inventory); never enable in production
+      LOG_REQUESTS: "false"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Functional tests: docker compose --profile test run --rm playwright [playwright args]
+  playwright:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    depends_on:
+      app:
+        condition: service_healthy
+    ipc: host # recommended for Chromium in containers
+    volumes:
+      - ./playwright-report:/tests/playwright-report
+      - ./test-results:/tests/test-results
+
+  # Performance tests: docker compose --profile perf run --rm k6 run /scripts/scenarios/smoke.js
+  k6:
+    profiles: ["perf"]
+    image: grafana/k6:2.3.0
+    user: root # lets k6 write reports into the bind-mounted folder on Linux CI runners
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://app:3000
+      K6_WEB_DASHBOARD: "true"
+      K6_WEB_DASHBOARD_EXPORT: /results/k6-report.html
+    volumes:
+      - ./k6:/scripts:ro
+      - ./k6-results:/results

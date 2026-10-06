@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manage booking | SkyLane Air</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/manage.js"></script>
+</head>
+<body data-page="manage">
+  <header class="site-header"></header>
+  <main id="main" class="container">
+    <h1>Manage your booking</h1>
+    <section class="card" id="retrieve-card">
+      <div id="retrieve-alert" class="hidden" data-testid="retrieve-alert"></div>
+      <form id="retrieve-form" novalidate data-testid="retrieve-form">
+        <div class="form-grid" id="retrieve-fields"></div>
+        <div class="actions"><button class="btn" type="submit" data-testid="retrieve-button">Find booking</button></div>
+      </form>
+    </section>
+    <div id="booking-details" data-testid="booking-details"></div>
+    <dialog id="cancel-dialog" aria-labelledby="cancel-dialog-title" data-testid="cancel-dialog">
+      <h2 id="cancel-dialog-title">Cancel this booking?</h2>
+      <p id="cancel-dialog-text"></p>
+      <div class="actions">
+        <button class="btn btn-danger" type="button" id="confirm-cancel" data-testid="confirm-cancel">Yes, cancel booking</button>
+        <button class="btn btn-secondary" type="button" id="dismiss-cancel" data-testid="dismiss-cancel">Keep booking</button>
+      </div>
+    </dialog>
+  </main>
+  <footer class="site-footer">SkyLane Air is a fictional airline built as a test automation demo. No real bookings are made.</footer>
+</body>
+</html>
