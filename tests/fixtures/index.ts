@@ -42,7 +42,7 @@ export const test = base.extend<Fixtures>({
     // The app keeps its session in localStorage; seed it before any page script runs.
     await page.addInitScript((value) => {
       window.localStorage.setItem('skylane.session', value);
-    }, JSON.stringify({ token: session.token, user: session.user }));
+    }, JSON.stringify(session));
     await use(page);
   },
 });

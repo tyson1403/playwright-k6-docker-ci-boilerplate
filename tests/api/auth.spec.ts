@@ -6,8 +6,14 @@ test.describe('Auth API', () => {
     const res = await api.login(DEMO_USER.email, DEMO_USER.password);
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.token).toMatch(/^[a-f0-9]{48}$/);
-    expect(body.user).toEqual({ id: expect.any(String), email: DEMO_USER.email, firstName: 'Demo', lastName: 'Traveller' });
+    expect(body.token).toMatch(/^[a-f0-9]{64}$/);
+    expect(body.user).toEqual({
+      id: expect.any(String),
+      email: DEMO_USER.email,
+      firstName: 'Demo',
+      lastName: 'Traveller',
+      lastLoginAt: expect.any(String),
+    });
     expect(body.user).not.toHaveProperty('passwordHash');
   });
 
@@ -16,7 +22,9 @@ test.describe('Auth API', () => {
   });
 
   test('wrong password and unknown email give the same 401 (no account enumeration)', async ({ api }) => {
-    const wrongPassword = await api.login(DEMO_USER.email, 'WrongPass1');
+    // A fresh account, so failed attempts can never lock out the shared demo user.
+    const customer = await api.newCustomer('enum');
+    const wrongPassword = await api.login(customer.email, 'WrongPass1');
     const unknownUser = await api.login('nobody@example.com', 'WrongPass1');
     expect(wrongPassword.status()).toBe(401);
     expect(unknownUser.status()).toBe(401);

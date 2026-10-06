@@ -3,5 +3,6 @@ playwright-report/
 test-results/
 blob-report/
 k6-results/
+app/data/
 *.log
 .env

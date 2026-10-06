@@ -15,9 +15,10 @@ test.describe('Customer account', () => {
     expect(await page.evaluate(() => localStorage.getItem('skylane.session'))).toBeNull();
   });
 
-  test('wrong password shows a generic error', async ({ login, page }) => {
+  test('wrong password shows a generic error', async ({ login, page, api }) => {
+    const customer = await api.newCustomer('wrongpw');
     await login.goto();
-    await login.login(DEMO_USER.email, 'WrongPass1');
+    await login.login(customer.email, 'WrongPass1');
     await expect(login.alert).toHaveText('Invalid email or password');
     await expect(page).toHaveURL('/login');
   });

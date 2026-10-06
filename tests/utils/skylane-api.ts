@@ -1,5 +1,5 @@
 import { expect, type APIRequestContext, type APIResponse } from '@playwright/test';
-import { CARDS, dubaiDate, passenger, type Card, type FareCode, type Passenger } from './test-data';
+import { CARDS, dubaiDate, passenger, uniqueEmail, type Card, type FareCode, type Passenger } from './test-data';
 
 export interface Fare {
   code: FareCode;
@@ -48,6 +48,29 @@ export interface BookingRequest {
   contact: { email: string; phone?: string };
   extraBag?: boolean;
   payment: Card;
+}
+
+export interface Customer {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  token: string;
+}
+
+export interface Session {
+  token: string;
+  expiresAt: string;
+  idleExpiresAt: string;
+  idleTimeoutSeconds: number;
+}
+
+export interface AccountState {
+  email: string;
+  failedLoginAttempts: number;
+  lockedUntil: string | null;
+  lastLoginAt: string | null;
+  activeSessions: number;
 }
 
 export interface SearchParams {
@@ -108,6 +131,14 @@ export class SkyLaneApi {
   setInventory = (flightId: string, seatsAvailable: number) =>
     this.request.put(`/api/test/flights/${flightId}/inventory`, { data: { seatsAvailable } });
 
+  // ---- account security ----
+  policy = () => this.request.get('/api/auth/policy');
+  inspectUser = (email: string) => this.request.get(`/api/test/users/${encodeURIComponent(email)}`);
+  expireLock = (email: string) => this.request.post(`/api/test/users/${encodeURIComponent(email)}/expire-lock`);
+  /** Pretend the session has been idle for / alive for this many minutes. */
+  ageSession = (token: string, age: { idleMinutes?: number; ageMinutes?: number }) =>
+    this.request.post('/api/test/sessions/age', { data: { token, ...age } });
+
   // ---- helpers for test setup ----
   async json<T>(response: Promise<APIResponse> | APIResponse, status = 200): Promise<T> {
     const res = await response;
@@ -119,6 +150,16 @@ export class SkyLaneApi {
     const { token } = await this.json<{ token: string }>(this.login(email, password));
     this.token = token;
     return token;
+  }
+
+  /**
+   * Registers a brand-new customer. Lockout and session tests use their own
+   * accounts so they can never lock out the shared demo user.
+   */
+  async newCustomer(prefix = 'customer'): Promise<Customer> {
+    const customer = { email: uniqueEmail(prefix), password: 'Secur3Pass', firstName: 'Nadia', lastName: 'Karim' };
+    const { token } = await this.json<{ token: string }>(this.register(customer), 201);
+    return { ...customer, token };
   }
 
   /** First flight on the route that still has seats for the party. */

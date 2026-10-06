@@ -1,6 +1,9 @@
-// In-memory data store. Intentionally simple: the app is a system under test,
-// and POST /api/test/reset puts it back into a known state between test runs.
+// Bookings and seat inventory live in memory; accounts and sessions are persisted
+// in SQLite (see services/accounts.js). POST /api/test/reset restores a known state.
 import crypto from 'node:crypto';
+import { config } from './config.js';
+import { openDatabase } from './db.js';
+import { createAccounts } from './services/accounts.js';
 import { initialSeatsAvailable } from './services/schedule.js';
 
 export const DEMO_USER = {
@@ -10,67 +13,24 @@ export const DEMO_USER = {
   lastName: 'Traveller',
 };
 
+export const accounts = createAccounts(openDatabase(config.dbPath), config.auth);
+
 const state = {
-  users: new Map(), // email -> user
-  sessions: new Map(), // token -> { email, expiresAt }
   bookings: new Map(), // pnr -> booking
   inventory: new Map(), // flightId -> seatsAvailable
   occupiedSeats: new Map(), // flightId -> Set of seats taken at check-in
   idempotency: new Map(), // key -> pnr
 };
 
-export function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
-  const hashed = crypto.scryptSync(password, salt, 32).toString('hex');
-  return `${salt}:${hashed}`;
-}
-
-export function verifyPassword(password, stored) {
-  const [salt, hashed] = stored.split(':');
-  const candidate = crypto.scryptSync(password, salt, 32);
-  return crypto.timingSafeEqual(candidate, Buffer.from(hashed, 'hex'));
-}
-
 export function reset() {
   for (const map of Object.values(state)) map.clear();
-  createUser(DEMO_USER);
+  accounts.reset([DEMO_USER]);
 }
 
-// ---- users & sessions ----
-export function createUser({ email, password, firstName, lastName }) {
-  const user = {
-    id: crypto.randomUUID(),
-    email: email.toLowerCase(),
-    passwordHash: hashPassword(password),
-    firstName,
-    lastName,
-    createdAt: new Date().toISOString(),
-  };
-  state.users.set(user.email, user);
-  return user;
+/** The demo user always exists, even on a fresh database. */
+function ensureDemoUser() {
+  if (!accounts.findByEmail(DEMO_USER.email)) accounts.createUser(DEMO_USER);
 }
-
-export const findUser = (email) => state.users.get(String(email || '').toLowerCase()) || null;
-
-const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
-
-export function createSession(email) {
-  const token = crypto.randomBytes(24).toString('hex');
-  const expiresAt = Date.now() + SESSION_TTL_MS;
-  state.sessions.set(token, { email, expiresAt });
-  return { token, expiresAt: new Date(expiresAt).toISOString() };
-}
-
-export function resolveSession(token) {
-  const session = state.sessions.get(token);
-  if (!session) return null;
-  if (session.expiresAt < Date.now()) {
-    state.sessions.delete(token);
-    return null;
-  }
-  return findUser(session.email);
-}
-
-export const deleteSession = (token) => state.sessions.delete(token);
 
 // ---- inventory ----
 export function seatsAvailable(flightId) {
@@ -117,10 +77,6 @@ export const bookingsForUser = (userId) => [...state.bookings.values()].filter((
 export const getIdempotentPnr = (key) => state.idempotency.get(key) || null;
 export const rememberIdempotentPnr = (key, pnr) => state.idempotency.set(key, pnr);
 
-export const stats = () => ({
-  users: state.users.size,
-  bookings: state.bookings.size,
-  activeSessions: state.sessions.size,
-});
+export const stats = () => ({ ...accounts.counts(), bookings: state.bookings.size });
 
-reset();
+ensureDemoUser();
