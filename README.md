@@ -4,7 +4,7 @@ A small but realistic airline booking app, plus the full test suite around it:
 
 | Layer | Tooling | What it covers |
 |---|---|---|
-| Unit | Node test runner | Pricing, refunds, card validation, schedule and time zones |
+| Unit / integration | Node test runner | Pricing, refunds, card validation, schedule and time zones; accounts, lockout and sessions against a real SQLite file |
 | API | Playwright `request` | Every endpoint: contracts, validation, business rules, security, concurrency |
 | UI (E2E) | Playwright + Page Objects | Search, booking, payment errors, manage/cancel, check-in with seat map, accounts |
 | Hybrid | Playwright (API setup + UI checks) | Fast, independent UI tests that create their own data through the API |
@@ -23,9 +23,10 @@ A hub-and-spoke low-cost carrier based in Dubai (DXB), flying to 11 cities in th
 - **Book and pay**: passenger details, optional extra bag, mock card payment, and a 6-character PNR.
 - **Manage booking**: retrieve by PNR + last name, then cancel with a refund calculated from the fare rules.
 - **Online check-in**: opens 48h and closes 60 min before departure. Includes a seat map and boarding passes.
-- **Accounts**: register, log in, and "My trips".
+- **Accounts**: register, log in, and "My trips". Accounts and sessions are stored in **SQLite**, so they survive restarts.
+- **Account security**: 5 failed logins lock the account for 15 minutes. Sessions end after 15 minutes of inactivity (with a warning a minute before) or after 8 hours, whichever comes first.
 
-Built with Node.js and Express, a plain HTML/JS frontend (no build step), and an in-memory store. The flight schedule is generated deterministically, so every environment sees the same flights without needing a database.
+Built with Node.js and Express, a plain HTML/JS frontend (no build step), SQLite for accounts (Node's built-in `node:sqlite`, so nothing to compile) and an in-memory store for bookings. The flight schedule is generated deterministically, so every environment sees the same flights without needing a database.
 
 ### Test hooks (only when `ENABLE_TEST_API=true`)
 
@@ -33,6 +34,21 @@ Built with Node.js and Express, a plain HTML/JS frontend (no build step), and an
 |---|---|
 | `POST /api/test/reset` | Restore the known starting state (runs once before each Playwright run) |
 | `PUT /api/test/flights/:id/inventory` | Set the seats left on a flight, for sold-out and race-condition tests |
+| `GET /api/test/users/:email` | Read an account's stored state: failed attempts, lock time, last login, active sessions |
+| `POST /api/test/users/:email/expire-lock` | End a lockout now, instead of waiting 15 minutes |
+| `POST /api/test/sessions/age` | Pretend a session has been idle (`idleMinutes`) or alive (`ageMinutes`) for a while |
+
+### Configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `3000` | HTTP port |
+| `DB_PATH` | `app/data/skylane.db` | SQLite file (`/app/data/skylane.db` in Docker, on the `skylane-data` volume) |
+| `ENABLE_TEST_API` | `true` | Mounts the test hooks above. Set to `false` in production |
+| `LOCKOUT_THRESHOLD` | `5` | Consecutive failed logins before the account locks |
+| `LOCKOUT_MINUTES` | `15` | How long a lockout lasts |
+| `SESSION_IDLE_MINUTES` | `15` | Inactivity before a session ends (sliding) |
+| `SESSION_ABSOLUTE_HOURS` | `8` | Maximum session lifetime, even when active |
 
 ### Test data
 
@@ -84,7 +100,8 @@ To run k6 without Docker against a local app: `k6 run -e BASE_URL=http://127.0.0
 
 ```
 app/                      the system under test
-  src/                    Express API: routes, services (schedule, pricing, payment), store
+  src/                    Express API: routes, services (schedule, pricing, payment, accounts), store
+  src/db.js               SQLite connection and versioned schema migrations
   public/                 HTML/CSS/JS frontend
   test/                   unit tests
 tests/
@@ -111,4 +128,7 @@ docs/test-plan.md         test strategy and test case catalogue
 - **Idempotency.** `POST /api/bookings` accepts an `Idempotency-Key`. The UI sends one per page load, and a test proves that a double-click charges once.
 - **Concurrency.** Both Playwright and k6 race many buyers for the last seats and assert exactly N succeed, the rest get `409 SOLD_OUT`, and nothing is oversold.
 - **Security behaviours.** No PNR or account enumeration (identical 404 and 401 responses), card numbers are never stored, and open redirects are blocked on login.
+- **Account security that's testable without waiting.** Lockout and session timeouts run on real timestamps in SQLite. API tests use test hooks to age sessions and expire locks, UI tests use Playwright's `page.clock` to fast-forward 15 minutes in milliseconds, and integration tests inject a fake clock.
+- **Security details.** Passwords are salted scrypt hashes and session tokens are stored only as SHA-256 hashes, so a leaked database can't be used to log in. Unknown emails are never locked and take as long to reject as a wrong password. An expired token is refused rather than silently treated as a guest.
 - **Performance SLOs as code.** Per-endpoint p95 thresholds in `k6/lib/config.js` fail the build when they are breached. The load mix models real traffic: about 60% browse, 25% book, 10% manage, 5% check-in.
+

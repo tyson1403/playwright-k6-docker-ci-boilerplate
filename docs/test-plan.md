@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-**In scope:** flight search, fares and pricing, booking and payment, manage booking (retrieve and cancel), online check-in, customer accounts, accessibility, and performance of the public API.
+**In scope:** flight search, fares and pricing, booking and payment, manage booking (retrieve and cancel), online check-in, customer accounts (SQLite persistence, lockout, session timeout), accessibility, and performance of the public API.
 
 **Out of scope:** real payment gateways, email delivery, multi-city or return trips, infants and children, and loyalty programmes. The app does not implement any of these.
 
@@ -10,7 +10,7 @@
 
 | Level | Share | Runs | Goal |
 |---|---|---|---|
-| Unit | Business rules | Every push (seconds) | Pricing, refunds, Luhn, expiry, schedule, time zones |
+| Unit / integration | Business rules | Every push (seconds) | Pricing, refunds, Luhn, expiry, schedule, time zones; accounts, lockout and sessions against a real SQLite file with a fake clock |
 | API | Most functional checks | Every push | Contracts, validation, rules, security, concurrency |
 | UI / hybrid | Key journeys | Every push (Chromium); `@smoke` also on mobile | What the customer sees and does |
 | Accessibility | Key pages | Every push | WCAG 2.1 AA: no serious or critical violations |
@@ -48,6 +48,10 @@
 | Overselling seats | API concurrency test plus the k6 oversell scenario |
 | Double charging | Idempotency key, tested through both the API and a UI double-click |
 | Data leakage | Not-found responses are identical whether or not a PNR or account exists; card numbers are never returned |
+| Brute-force password guessing | Lockout after 5 failures; tested at API, UI and integration level |
+| Time-based rules are slow to test | Test hooks age sessions and expire locks; `page.clock` fast-forwards the browser; integration tests inject a clock |
+| Shared demo account gets locked by a test | Every lockout and session test registers its own customer |
+| Lost accounts on restart | SQLite on a Docker volume; CI restarts the container and logs in again |
 
 ## 6. Test case catalogue
 
@@ -127,11 +131,45 @@ Priority: **P1** = critical path (tagged `@smoke`), **P2** = important, **P3** =
 | AC-06 | `?next=//evil.example.com` | No open redirect | P2 | `e2e/auth` |
 | AC-07 | Malformed JSON body | 400 INVALID_JSON | P3 | `api/auth` |
 
+### Account security
+
+| ID | Scenario | Expected | Pri | Automated in |
+|---|---|---|---|---|
+| AS-01 | Failed logins below the limit | Each one counted on the account; generic 401 | P2 | `api/account-security` |
+| AS-02 | 5th consecutive failure | 423 ACCOUNT_LOCKED with `Retry-After` ≈ 900s; lock time stored | P1 | `api/account-security`, `e2e/account-security` |
+| AS-03 | Correct password while locked | Still 423; no session created | P1 | both |
+| AS-04 | Success before the limit | Counter resets; a fresh set of attempts | P2 | `api/account-security`, `app/test/accounts` |
+| AS-05 | Lock expires | Login works; counter starts again rather than re-locking | P1 | all three levels |
+| AS-06 | Email in different case or with spaces | Counts against the same account | P3 | `api/account-security` |
+| AS-07 | Another customer while one is locked | Unaffected | P2 | `api/account-security` |
+| AS-08 | Unknown email, many attempts | Always 401, never 423 (no enumeration) | P2 | `api/account-security`, `app/test/accounts` |
+| AS-09 | Already signed-in session when the account locks | Keeps working | P3 | `api/account-security` |
+| ST-01 | Login | Returns `expiresAt` (8h), `idleExpiresAt` and `idleTimeoutSeconds` (900) | P2 | `api/account-security` |
+| ST-02 | Idle for longer than 15 min | 401 SESSION_EXPIRED; session deleted | P1 | `api/account-security`, `app/test/accounts` |
+| ST-03 | Idle for 14 min | Still valid | P2 | `api/account-security` |
+| ST-04 | Regular activity | Idle window slides; session stays valid past 15 min | P1 | `api/account-security`, `app/test/accounts` |
+| ST-05 | Active for more than 8h | Ends at the absolute limit | P2 | `api/account-security`, `app/test/accounts` |
+| ST-06 | Expired token used to book | 401 SESSION_EXPIRED, not a silent guest booking | P1 | `api/account-security` |
+| ST-07 | Two devices; log out one | The other stays signed in | P2 | `api/account-security`, `app/test/accounts` |
+| ST-08 | Browser idle for 14 min | "Are you still there?" warning with a countdown | P1 | `e2e/account-security` |
+| ST-09 | "Stay signed in" | Session extended on the server; timer restarts | P1 | `e2e/account-security` |
+| ST-10 | Browser idle for 15 min | Signed out on the client and server; login page explains why; returns to the same page after login | P1 | `e2e/account-security` |
+| ST-11 | Escape on the warning / "Log out now" | Warning stays / signs out | P3 | `e2e/account-security` |
+| ST-12 | Session expired on the server, then the page is reloaded | Protected page: redirect to login and back. Public page: notice, stays on the page | P2 | `e2e/account-security`, `hybrid/my-trips` |
+| DB-01 | Database closed and reopened | Accounts still log in; migrations don't re-run | P1 | `app/test/accounts`, CI container restart |
+| DB-02 | Storage of secrets | Salted scrypt password hashes; session tokens stored only as SHA-256 | P1 | `app/test/accounts` |
+| DB-03 | Duplicate email in another case | Rejected by the unique, case-insensitive index | P2 | `app/test/accounts`, `api/auth` |
+| DB-04 | Expired sessions | Purged a day after expiry, so customers see "expired" rather than "invalid" | P3 | `app/test/accounts` |
+
 ### Non-functional
 
 | ID | Scenario | Expected | Automated in |
 |---|---|---|---|
-| NF-01 | axe scan: home, results, booking (with errors), seat map | No serious or critical WCAG 2.1 AA issues | `e2e/accessibility` |
+| NF-01 | axe scan: home, results, booking (with errors), seat map, session-timeout warning | No serious or critical WCAG 2.1 AA issues | `e2e/accessibility` |
 | NF-02 | Keyboard-only form completion, skip link | Logical focus order | `e2e/accessibility` |
 | NF-03 | Mobile viewport (Pixel 7) | `@smoke` journeys pass | `mobile-chrome` project |
 | NF-04 | Load / stress / spike | SLOs in section 4 | `k6/scenarios/*` |
+
+## 7. Planned: phase 2
+
+A forgot-password flow will build on the SQLite layer: a new migration for single-use, time-limited reset tokens (stored hashed), an emailed reset link (captured by a test mailbox), password-reset rate limiting, and revoking all of the user's sessions once the password changes (`deleteSessionsForUser` already exists for this).
