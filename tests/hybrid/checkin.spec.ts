@@ -7,7 +7,7 @@ test.describe('Online check-in', () => {
     const route = ROUTES.checkinFamily[testInfo.project.name as keyof typeof ROUTES.checkinFamily];
     const created = await api.book({ route, passengers: party(3) });
 
-    await checkin.goto();
+    await checkin.open();
     await checkin.start(created.pnr, created.passengers[0].lastName);
     await expect(checkin.completeButton).toBeDisabled();
 
@@ -28,7 +28,7 @@ test.describe('Online check-in', () => {
 
   test('unavailable seats cannot be selected', async ({ api, checkin }) => {
     const created = await api.book({ route: ROUTES.checkinUi });
-    await checkin.goto();
+    await checkin.open();
     await checkin.start(created.pnr, created.passengers[0].lastName);
 
     const taken = checkin.seatmap.locator('button.seat[disabled]').first();
@@ -38,7 +38,7 @@ test.describe('Online check-in', () => {
 
   test('a passenger can change their seat before confirming', async ({ api, checkin }) => {
     const created = await api.book({ route: ROUTES.checkinUi });
-    await checkin.goto();
+    await checkin.open();
     await checkin.start(created.pnr, created.passengers[0].lastName);
 
     const [first] = await checkin.chooseAvailableSeats(1);
@@ -49,7 +49,7 @@ test.describe('Online check-in', () => {
 
   test('seat taken by someone else meanwhile shows an error, then succeeds with another seat', async ({ api, checkin }) => {
     const mine = await api.book({ route: ROUTES.checkinUi });
-    await checkin.goto();
+    await checkin.open();
     await checkin.start(mine.pnr, mine.passengers[0].lastName);
     const [seat] = await checkin.chooseAvailableSeats(1);
 
@@ -67,7 +67,7 @@ test.describe('Online check-in', () => {
 
   test('check-in is refused more than 48 hours before departure', async ({ api, checkin }) => {
     const created = await api.book({ route: ROUTES.checkinUi, daysAhead: 6, passengers: [passenger()] });
-    await checkin.goto();
+    await checkin.open();
     await checkin.start(created.pnr, created.passengers[0].lastName);
     await expect(checkin.alert).toHaveText('Online check-in opens 48 hours before departure');
     await expect(checkin.seatmap).toBeHidden();

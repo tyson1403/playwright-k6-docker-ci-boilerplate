@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { BasePage, expect } from '@tyson1403/playwright-automation-platform';
 
 export interface SearchCriteria {
   origin?: string;
@@ -7,7 +8,8 @@ export interface SearchCriteria {
   passengers?: number;
 }
 
-export class HomePage {
+export class HomePage extends BasePage {
+  readonly path = '/';
   readonly origin: Locator;
   readonly destination: Locator;
   readonly date: Locator;
@@ -16,7 +18,8 @@ export class HomePage {
   readonly destinationError: Locator;
   readonly dateError: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.origin = page.getByLabel('From');
     this.destination = page.getByLabel('To', { exact: true });
     this.date = page.getByLabel('Departure date');
@@ -26,8 +29,8 @@ export class HomePage {
     this.dateError = page.getByTestId('date-error');
   }
 
-  async goto() {
-    await this.page.goto('/');
+  async open() {
+    await super.open();
     // Airports load asynchronously; wait until the destination list is populated.
     await expect(this.destination.locator('option')).not.toHaveCount(0);
   }

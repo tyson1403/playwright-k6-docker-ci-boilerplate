@@ -5,14 +5,35 @@ A small but realistic airline booking app, plus the full test suite around it:
 | Layer | Tooling | What it covers |
 |---|---|---|
 | Unit / integration | Node test runner | Pricing, refunds, card validation, schedule and time zones; accounts, lockout and sessions against a real SQLite file |
-| API | Playwright `request` | Every endpoint: contracts, validation, business rules, security, concurrency |
-| UI (E2E) | Playwright + Page Objects | Search, booking, payment errors, manage/cancel, check-in with seat map, accounts |
+| API | Playwright `request` (via the platform) | Every endpoint: contracts, validation, business rules, security, concurrency |
+| UI (E2E) | Playwright + Page Objects on the platform's `BasePage` | Search, booking, payment errors, manage/cancel, check-in with seat map, accounts |
 | Hybrid | Playwright (API setup + UI checks) | Fast, independent UI tests that create their own data through the API |
 | Accessibility | axe-core | WCAG 2.1 AA scans of the key pages, plus keyboard navigation |
 | Performance | k6 | Smoke, load, stress, spike, and an oversell (race condition) test |
 | Delivery | Docker Compose + GitHub Actions | App, Playwright and k6 all run in containers; CI on every push |
 
 > SkyLane Air is fictional. It has no connection to any real airline.
+
+## Built on playwright-automation-platform
+
+The Playwright suite runs on [playwright-automation-platform](https://github.com/tyson1403/playwright-automation-platform), a shared, versioned test platform. This repo is a real consumer of it, installed from a release tag:
+
+```json
+"@tyson1403/playwright-automation-platform": "github:tyson1403/playwright-automation-platform#v0.5.0"
+```
+
+| From the platform | How SkyLane Air uses it |
+|---|---|
+| Pinned Playwright version | No `@playwright/test` dependency here. Upgrading Playwright means bumping the platform tag; CI fails if `Dockerfile.playwright` uses a different version. |
+| `createConfig()` | [playwright.config.ts](playwright.config.ts) declares only what is specific to this app: API and UI projects, `baseURL`, the web server, and extra CI reporters. Retries and `forbidOnly` in CI come from the platform. |
+| `test` with the `pageErrors` fixture | Every UI test fails if the page throws an uncaught JavaScript error. [platform-guardrails.spec.ts](tests/e2e/platform-guardrails.spec.ts) proves it. |
+| `BasePage` | The page objects in [tests/pages/](tests/pages) extend it and declare their `path`. |
+| `uniqueId()` | Builds unique test emails. |
+
+What this project adds on top of the platform:
+
+- **`apiTest`** for API-only specs, which switches off `pageErrors` so API tests don't open a browser page. With it on, the API suite took about 26s instead of 15s.
+- **Its own projects** (`api`, `chromium`, `mobile-chrome`) instead of the platform's browser list, because the API and UI suites are split.
 
 ## The application
 

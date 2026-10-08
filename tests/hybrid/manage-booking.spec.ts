@@ -7,7 +7,7 @@ test.describe('Manage booking', () => {
   test('retrieves a booking by PNR and last name @smoke', async ({ api, manage }) => {
     const created = await api.book({ route: ROUTES.manage, passengers: party(2), fare: 'FLEX' });
 
-    await manage.goto();
+    await manage.open();
     await manage.retrieve(created.pnr.toLowerCase(), created.passengers[1].lastName.toUpperCase());
 
     await expect(manage.summary.pnr).toHaveText(created.pnr);
@@ -18,14 +18,14 @@ test.describe('Manage booking', () => {
 
   test('wrong last name shows a friendly not-found message', async ({ api, manage }) => {
     const created = await api.book({ route: ROUTES.manage });
-    await manage.goto();
+    await manage.open();
     await manage.retrieve(created.pnr, 'Nobody');
     await expect(manage.alert).toHaveText('We could not find a booking with those details. Please check and try again.');
     await expect(manage.summary.pnr).toBeHidden();
   });
 
   test('validates the booking reference format before calling the API', async ({ manage, page }) => {
-    await manage.goto();
+    await manage.open();
     await manage.retrieve('AB1', '');
     await expect(page.getByTestId('pnr-error')).toHaveText('Booking reference must be 6 letters or numbers');
     await expect(page.getByTestId('last-name-error')).toHaveText('Last name is required');
@@ -35,7 +35,7 @@ test.describe('Manage booking', () => {
     const created = await api.book({ route: ROUTES.manage, fare: 'STANDARD', passengers: party(2) });
     const expectedRefund = created.price.total - PRICING.standardCancelFee * 2;
 
-    await manage.goto();
+    await manage.open();
     await manage.retrieve(created.pnr, created.passengers[0].lastName);
     await manage.cancelButton.click();
     await expect(manage.cancelDialog).toBeVisible();
@@ -54,7 +54,7 @@ test.describe('Manage booking', () => {
 
   test('"Keep booking" closes the dialog without cancelling', async ({ api, manage }) => {
     const created = await api.book({ route: ROUTES.manage, fare: 'SAVER' });
-    await manage.goto();
+    await manage.open();
     await manage.retrieve(created.pnr, created.passengers[0].lastName);
     await manage.cancelButton.click();
     await expect(manage.cancelDialog).toContainText('only airport taxes will be refunded');

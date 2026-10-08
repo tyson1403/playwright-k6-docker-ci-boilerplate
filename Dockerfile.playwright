@@ -1,9 +1,12 @@
-# Test runner image. The tag must match the @playwright/test version in package.json,
-# so the bundled browsers are the ones the test runner expects.
+# Test runner image. The tag must match the Playwright version pinned by
+# playwright-automation-platform, so the bundled browsers are the ones the runner expects.
 FROM mcr.microsoft.com/playwright:v1.63.0-noble
 
 WORKDIR /tests
 ENV CI=true
+
+# git is needed to install the platform from its GitHub release tag.
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -12,5 +15,6 @@ COPY tsconfig.json playwright.config.ts ./
 COPY tests ./tests
 
 # BASE_URL points at the app container, which also turns off Playwright's own webServer.
-ENV BASE_URL=http://app:3000
+# Not http://app:3000: browsers force the real ".app" domain onto HTTPS.
+ENV BASE_URL=http://skylane:3000
 ENTRYPOINT ["npx", "playwright", "test"]

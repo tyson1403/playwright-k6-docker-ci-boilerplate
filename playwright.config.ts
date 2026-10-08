@@ -1,25 +1,31 @@
-import { defineConfig, devices } from '@playwright/test';
+import { devices } from '@playwright/test';
+import { createConfig } from '@tyson1403/playwright-automation-platform';
+
+// Built on the shared playwright-automation-platform: it owns the Playwright
+// version and the defaults (retries and forbidOnly in CI, list + HTML reporters).
+// This file only declares what is specific to SkyLane Air.
 
 const isCI = !!process.env.CI;
 // When BASE_URL is set (Docker / CI against a deployed app) we test that app;
 // otherwise Playwright starts the app locally.
 const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
 
-export default defineConfig({
+export default createConfig({
   testDir: './tests',
   globalSetup: './tests/global-setup.ts',
   fullyParallel: true,
-  forbidOnly: isCI,
-  retries: isCI ? 2 : 0,
   workers: isCI ? 4 : undefined,
   timeout: 30_000,
   expect: { timeout: 7_000 },
+  // Adds JUnit and GitHub annotations in CI on top of the platform's reporters.
   reporter: isCI
     ? [['list'], ['html', { open: 'never' }], ['junit', { outputFile: 'test-results/junit.xml' }], ['github']]
     : [['list'], ['html', { open: 'never' }]],
+  // Merged with the platform's `use` defaults.
   use: {
     baseURL,
     testIdAttribute: 'data-testid',
+    // The platform traces on first retry; locally there are no retries, so keep failures debuggable.
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -27,6 +33,7 @@ export default defineConfig({
     locale: 'en-US',
     timezoneId: 'Asia/Dubai',
   },
+  // Replaces the platform's browser list: SkyLane splits API and UI suites into separate projects.
   projects: [
     {
       name: 'api',

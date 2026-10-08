@@ -3,7 +3,7 @@ import { DEMO_USER, uniqueEmail } from '../utils/test-data';
 
 test.describe('Customer account', () => {
   test('customer logs in and out @smoke', async ({ login, header, page }) => {
-    await login.goto();
+    await login.open();
     await login.login(DEMO_USER.email, DEMO_USER.password);
 
     await expect(page).toHaveURL('/trips');
@@ -17,7 +17,7 @@ test.describe('Customer account', () => {
 
   test('wrong password shows a generic error', async ({ login, page, api }) => {
     const customer = await api.newCustomer('wrongpw');
-    await login.goto();
+    await login.open();
     await login.login(customer.email, 'WrongPass1');
     await expect(login.alert).toHaveText('Invalid email or password');
     await expect(page).toHaveURL('/login');
@@ -28,7 +28,7 @@ test.describe('Customer account', () => {
     page.on('request', (req) => {
       if (req.url().includes('/api/auth/login')) apiCalled = true;
     });
-    await login.goto();
+    await login.open();
     await login.submit.click();
     await expect(page.getByTestId('email-error')).toHaveText('Email is required');
     await expect(page.getByTestId('password-error')).toHaveText('Password is required');

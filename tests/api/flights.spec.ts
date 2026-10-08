@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures';
+import { apiTest as test, expect } from '../fixtures';
 import { PRICING, ROUTES, dubaiDate } from '../utils/test-data';
 import type { Flight } from '../utils/skylane-api';
 

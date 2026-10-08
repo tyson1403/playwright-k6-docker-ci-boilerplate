@@ -45,6 +45,12 @@ jobs:
             app/package-lock.json
       - run: npm ci && npm ci --prefix app
       - run: npm run typecheck
+      - name: Playwright Docker image matches the platform's pinned version
+        run: |
+          PINNED=$(node -p "require('@playwright/test/package.json').version")
+          grep -q "playwright:v${PINNED}-" Dockerfile.playwright \
+            || { echo "::error file=Dockerfile.playwright::Use the v${PINNED} image to match playwright-automation-platform"; exit 1; }
+          echo "Platform pins Playwright ${PINNED}; Dockerfile.playwright matches"
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
       - uses: actions/upload-artifact@v4

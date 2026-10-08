@@ -5,6 +5,11 @@ services:
   app:
     build: ./app
     image: skylane-air:local
+    networks:
+      default:
+        # Containers reach the app as http://skylane:3000, not http://app:3000:
+        # ".app" is a real top-level domain that browsers force onto HTTPS (HSTS preload).
+        aliases: [skylane]
     ports:
       - "3000:3000"
     environment:
@@ -46,7 +51,7 @@ services:
       app:
         condition: service_healthy
     environment:
-      BASE_URL: http://app:3000
+      BASE_URL: http://skylane:3000
       K6_WEB_DASHBOARD: "true"
       K6_WEB_DASHBOARD_EXPORT: /results/k6-report.html
     volumes:

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { test, expect } from '../fixtures';
+import { apiTest as test, expect } from '../fixtures';
 import { CARDS, DEMO_USER, PRICING, ROUTES, dubaiDate, party, passenger, type FareCode } from '../utils/test-data';
 import type { Booking, BookingRequest, Flight, SkyLaneApi } from '../utils/skylane-api';
 

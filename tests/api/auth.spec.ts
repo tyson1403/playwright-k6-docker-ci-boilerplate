@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures';
+import { apiTest as test, expect } from '../fixtures';
 import { DEMO_USER, uniqueEmail } from '../utils/test-data';
 
 test.describe('Auth API', () => {

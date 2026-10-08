@@ -4,7 +4,7 @@ import type { Flight } from '../utils/skylane-api';
 
 test.describe('Flight search', () => {
   test.beforeEach(async ({ home }) => {
-    await home.goto();
+    await home.open();
   });
 
   test('defaults to departing from Dubai with 1 passenger', async ({ home }) => {

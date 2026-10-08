@@ -1,4 +1,7 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+// The platform's `test` adds an automatic `pageErrors` fixture: any uncaught
+// JavaScript error on the page fails the test.
+import { test as base, expect } from '@tyson1403/playwright-automation-platform';
 import { SkyLaneApi } from '../utils/skylane-api';
 import { DEMO_USER } from '../utils/test-data';
 import { HomePage } from '../pages/home.page';
@@ -44,6 +47,17 @@ export const test = base.extend<Fixtures>({
       window.localStorage.setItem('skylane.session', value);
     }, JSON.stringify(session));
     await use(page);
+  },
+});
+
+/**
+ * For API-only specs: the same fixtures, minus the platform's automatic
+ * `pageErrors` check. That check needs a browser page, so leaving it on would
+ * open a browser for every API test for nothing.
+ */
+export const apiTest = test.extend({
+  pageErrors: async ({}, use) => {
+    await use([]);
   },
 });
 

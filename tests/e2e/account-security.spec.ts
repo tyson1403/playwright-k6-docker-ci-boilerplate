@@ -27,7 +27,7 @@ async function lockAccount(api: SkyLaneApi, customer: Customer) {
 test.describe('Account lockout (UI)', () => {
   test('repeated wrong passwords lock the account @smoke', async ({ api, login }) => {
     const customer = await api.newCustomer('ui-lock');
-    await login.goto();
+    await login.open();
 
     for (let i = 1; i < policy.lockoutThreshold; i++) {
       await login.login(customer.email, `WrongPass${i}`);
@@ -41,7 +41,7 @@ test.describe('Account lockout (UI)', () => {
     const customer = await api.newCustomer('ui-locked');
     await lockAccount(api, customer);
 
-    await login.goto();
+    await login.open();
     await login.login(customer.email, customer.password);
     await expect(login.alert).toHaveText(LOCKED_MESSAGE);
     await expect(page).toHaveURL('/login');
@@ -53,7 +53,7 @@ test.describe('Account lockout (UI)', () => {
     await lockAccount(api, customer);
     await api.json(api.expireLock(customer.email));
 
-    await login.goto();
+    await login.open();
     await login.login(customer.email, customer.password);
     await expect(page).toHaveURL('/trips');
     await expect(header.greeting).toHaveText(`Hi, ${customer.firstName}`);
@@ -67,7 +67,7 @@ test.describe('Session timeout (UI)', () => {
   test.beforeEach(async ({ api, login, page }) => {
     customer = await api.newCustomer('ui-session');
     await page.clock.install();
-    await login.goto();
+    await login.open();
     await login.login(customer.email, customer.password);
     await expect(page).toHaveURL('/trips');
     // The idle timer starts once the page has confirmed the session with the server.

@@ -9,7 +9,7 @@ test.describe('Booking a flight', () => {
     const flight = await api.findFlight({ ...ROUTES.bookingUi, date, passengers: 2 });
 
     await test.step('search and pick a fare', async () => {
-      await home.goto();
+      await home.open();
       await home.search({ ...ROUTES.bookingUi, date, passengers: 2 });
       await results.selectFare(flight.id, 'STANDARD');
     });
@@ -50,7 +50,7 @@ test.describe('Booking a flight', () => {
 
   test('price summary updates when extra baggage is toggled', async ({ booking, api }) => {
     const flight = await api.findFlight({ ...ROUTES.bookingUi, date: dubaiDate(5), passengers: 3 });
-    await booking.goto(flight.id, 'SAVER', 3);
+    await booking.openFor(flight.id, 'SAVER', 3);
 
     await expect(booking.priceExtras).toHaveText('AED 0');
     await booking.extraBag.check();
@@ -61,7 +61,7 @@ test.describe('Booking a flight', () => {
 
   test('highlights every missing required field', async ({ booking, api }) => {
     const flight = await api.findFlight({ ...ROUTES.bookingUi, date: dubaiDate(5) });
-    await booking.goto(flight.id, 'SAVER', 1);
+    await booking.openFor(flight.id, 'SAVER', 1);
     await booking.pay();
 
     await expect(booking.alert).toHaveText('Please complete the highlighted fields.');
@@ -73,7 +73,7 @@ test.describe('Booking a flight', () => {
 
   test('shows server-side validation next to the right field', async ({ booking, api }) => {
     const flight = await api.findFlight({ ...ROUTES.bookingUi, date: dubaiDate(5) });
-    await booking.goto(flight.id, 'SAVER', 1);
+    await booking.openFor(flight.id, 'SAVER', 1);
     await booking.completeBooking({
       passengers: [passenger({ firstName: 'R2D2' })],
       email: 'not-an-email',
@@ -88,7 +88,7 @@ test.describe('Booking a flight', () => {
 
   test('a declined card keeps the customer on the page with an error @smoke', async ({ booking, api, page }) => {
     const flight = await api.findFlight({ ...ROUTES.bookingUi, date: dubaiDate(5) });
-    await booking.goto(flight.id, 'FLEX', 1);
+    await booking.openFor(flight.id, 'FLEX', 1);
     await booking.completeBooking({ passengers: [passenger()], email: uniqueEmail(), card: CARDS.declined() });
 
     await expect(booking.alert).toHaveText('Card declined by issuer');
@@ -98,7 +98,7 @@ test.describe('Booking a flight', () => {
 
   test('a fixed card after a decline books successfully', async ({ booking, page, api }) => {
     const flight = await api.findFlight({ ...ROUTES.bookingUi, date: dubaiDate(5) });
-    await booking.goto(flight.id, 'SAVER', 1);
+    await booking.openFor(flight.id, 'SAVER', 1);
     await booking.completeBooking({ passengers: [passenger()], email: uniqueEmail(), card: CARDS.insufficientFunds() });
     await expect(booking.alert).toHaveText('Insufficient funds');
 
@@ -110,7 +110,7 @@ test.describe('Booking a flight', () => {
   test('double-clicking "Pay" creates only one booking', async ({ booking, page, api }) => {
     // Own flight and a known seat count, so other tests can't change the numbers.
     const flight = await api.flightWithSeats({ ...ROUTES.bookingUi, date: dubaiDate(31) }, 50);
-    await booking.goto(flight.id, 'SAVER', 1);
+    await booking.openFor(flight.id, 'SAVER', 1);
     await booking.fillPassengers([passenger()]);
     await booking.fillContact(uniqueEmail());
     await booking.fillPayment(CARDS.valid());

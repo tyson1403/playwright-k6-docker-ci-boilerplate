@@ -1,6 +1,8 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { BasePage, expect } from '@tyson1403/playwright-automation-platform';
 
-export class CheckinPage {
+export class CheckinPage extends BasePage {
+  readonly path = '/checkin';
   readonly pnrInput: Locator;
   readonly lastNameInput: Locator;
   readonly startButton: Locator;
@@ -11,7 +13,8 @@ export class CheckinPage {
   readonly success: Locator;
   readonly boardingPasses: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.pnrInput = page.getByLabel('Booking reference');
     this.lastNameInput = page.getByLabel('Last name');
     this.startButton = page.getByRole('button', { name: 'Start check-in' });
@@ -21,10 +24,6 @@ export class CheckinPage {
     this.completeButton = page.getByRole('button', { name: 'Confirm seats and check in' });
     this.success = page.getByTestId('checkin-success');
     this.boardingPasses = page.getByTestId('boarding-pass');
-  }
-
-  async goto() {
-    await this.page.goto('/checkin');
   }
 
   async start(pnr: string, lastName: string) {

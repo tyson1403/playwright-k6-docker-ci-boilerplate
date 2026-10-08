@@ -1,4 +1,5 @@
-import { expect, type APIRequestContext, type APIResponse } from '@playwright/test';
+import type { APIRequestContext, APIResponse } from '@playwright/test';
+import { expect } from '@tyson1403/playwright-automation-platform';
 import { CARDS, dubaiDate, passenger, uniqueEmail, type Card, type FareCode, type Passenger } from './test-data';
 
 export interface Fare {

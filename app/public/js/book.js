@@ -13,7 +13,8 @@ const flightId = params.get('flightId');
 const fare = params.get('fare');
 const pax = Number(params.get('passengers') || 1);
 // One key per page load: a double-submit or retry can never create two bookings.
-const idempotencyKey = crypto.randomUUID();
+// (crypto.randomUUID only exists on HTTPS/localhost; getRandomValues works everywhere.)
+const idempotencyKey = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
 
 const TITLE_OPTIONS = '<option value="">Select</option><option value="MR">Mr</option><option value="MRS">Mrs</option><option value="MS">Ms</option>';
 

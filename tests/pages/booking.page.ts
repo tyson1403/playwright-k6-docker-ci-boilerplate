@@ -1,9 +1,11 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { BasePage, expect } from '@tyson1403/playwright-automation-platform';
 import type { Card, Passenger } from '../utils/test-data';
 
 const TITLE_LABELS = { MR: 'Mr', MRS: 'Mrs', MS: 'Ms' } as const;
 
-export class BookingPage {
+export class BookingPage extends BasePage {
+  readonly path = '/book';
   readonly alert: Locator;
   readonly extraBag: Locator;
   readonly payButton: Locator;
@@ -15,7 +17,8 @@ export class BookingPage {
   readonly summaryFlight: Locator;
   readonly summaryFare: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.alert = page.getByTestId('book-alert');
     this.extraBag = page.getByLabel(/extra baggage/i);
     this.payButton = page.getByRole('button', { name: 'Pay and book' });
@@ -28,7 +31,7 @@ export class BookingPage {
     this.summaryFare = page.getByTestId('summary-fare');
   }
 
-  async goto(flightId: string, fare: string, passengers = 1) {
+  async openFor(flightId: string, fare: string, passengers = 1) {
     await this.page.goto(`/book?${new URLSearchParams({ flightId, fare, passengers: String(passengers) })}`);
     await this.waitForReady();
   }

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { uniqueId } from '@tyson1403/playwright-automation-platform';
 
 export type Title = 'MR' | 'MRS' | 'MS';
 export type FareCode = 'SAVER' | 'STANDARD' | 'FLEX';
@@ -83,4 +84,4 @@ export function party(count: number): Passenger[] {
   }));
 }
 
-export const uniqueEmail = (prefix = 'qa') => `${prefix}.${randomUUID().slice(0, 8)}@example.com`;
+export const uniqueEmail = (prefix = 'qa') => `${uniqueId(prefix)}@example.com`;

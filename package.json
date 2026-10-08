@@ -14,19 +14,19 @@
     "test:headed": "playwright test --project=chromium --headed",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
-    "k6:smoke": "docker compose --profile perf run --rm k6 run /scripts/scenarios/smoke.js",
-    "k6:load": "docker compose --profile perf run --rm k6 run /scripts/scenarios/load.js",
-    "k6:stress": "docker compose --profile perf run --rm k6 run /scripts/scenarios/stress.js",
-    "k6:spike": "docker compose --profile perf run --rm k6 run /scripts/scenarios/spike.js",
-    "k6:oversell": "docker compose --profile perf run --rm k6 run /scripts/scenarios/oversell.js",
+    "k6:smoke": "docker compose --profile perf run --rm k6 run --summary-export /results/smoke-summary.json /scripts/scenarios/smoke.js",
+    "k6:load": "docker compose --profile perf run --rm k6 run --summary-export /results/load-summary.json /scripts/scenarios/load.js",
+    "k6:stress": "docker compose --profile perf run --rm k6 run --summary-export /results/stress-summary.json /scripts/scenarios/stress.js",
+    "k6:spike": "docker compose --profile perf run --rm k6 run --summary-export /results/spike-summary.json /scripts/scenarios/spike.js",
+    "k6:oversell": "docker compose --profile perf run --rm k6 run --summary-export /results/oversell-summary.json /scripts/scenarios/oversell.js",
     "docker:up": "docker compose up -d --build --wait app",
     "docker:down": "docker compose down",
     "docker:test": "docker compose --profile test run --rm playwright"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.4",
+    "@tyson1403/playwright-automation-platform": "github:tyson1403/playwright-automation-platform#v0.5.0",
     "typescript": "^7.0.2"
   }
 }

@@ -1,7 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
+import { BasePage } from '@tyson1403/playwright-automation-platform';
 import { BookingSummary } from './confirmation.page';
 
-export class ManageBookingPage {
+export class ManageBookingPage extends BasePage {
+  readonly path = '/manage';
   readonly pnrInput: Locator;
   readonly lastNameInput: Locator;
   readonly findButton: Locator;
@@ -13,7 +15,8 @@ export class ManageBookingPage {
   readonly confirmCancel: Locator;
   readonly dismissCancel: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.pnrInput = page.getByLabel('Booking reference');
     this.lastNameInput = page.getByLabel('Last name');
     this.findButton = page.getByRole('button', { name: 'Find booking' });
@@ -24,10 +27,6 @@ export class ManageBookingPage {
     this.cancelDialog = page.getByRole('dialog', { name: 'Cancel this booking?' });
     this.confirmCancel = this.cancelDialog.getByRole('button', { name: 'Yes, cancel booking' });
     this.dismissCancel = this.cancelDialog.getByRole('button', { name: 'Keep booking' });
-  }
-
-  async goto() {
-    await this.page.goto('/manage');
   }
 
   async retrieve(pnr: string, lastName: string) {

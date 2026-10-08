@@ -12,7 +12,7 @@ async function scan(page: import('@playwright/test').Page, testInfo: import('@pl
 
 test.describe('Accessibility (axe, WCAG 2.1 AA)', () => {
   test('home / search page', async ({ home, page }, testInfo) => {
-    await home.goto();
+    await home.open();
     await scan(page, testInfo);
   });
 
@@ -24,7 +24,7 @@ test.describe('Accessibility (axe, WCAG 2.1 AA)', () => {
 
   test('booking form, including error state', async ({ booking, api, page }, testInfo) => {
     const flight = await api.findFlight({ ...ROUTES.bookingUi, date: dubaiDate(8) });
-    await booking.goto(flight.id, 'STANDARD', 2);
+    await booking.openFor(flight.id, 'STANDARD', 2);
     await booking.pay(); // trigger validation errors
     await expect(booking.alert).toBeVisible();
     await scan(page, testInfo);
@@ -32,14 +32,14 @@ test.describe('Accessibility (axe, WCAG 2.1 AA)', () => {
 
   test('check-in seat map', async ({ checkin, api, page }, testInfo) => {
     const created = await api.book({ route: ROUTES.checkinUi });
-    await checkin.goto();
+    await checkin.open();
     await checkin.start(created.pnr, created.passengers[0].lastName);
     await expect(checkin.seatmap).toBeVisible();
     await scan(page, testInfo);
   });
 
   test('form fields can be completed with the keyboard only', async ({ home, page }) => {
-    await home.goto();
+    await home.open();
     await page.keyboard.press('Tab'); // skip link
     await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
     await home.origin.focus();

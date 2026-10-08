@@ -1,6 +1,6 @@
 // Account lockout and session timeout. Every test registers its own customer
 // so lockouts never affect other tests; test hooks stand in for waiting 15 minutes.
-import { test, expect } from '../fixtures';
+import { apiTest as test, expect } from '../fixtures';
 import { CARDS, ROUTES, dubaiDate, passenger } from '../utils/test-data';
 import type { AccountState, Customer, Session, SkyLaneApi } from '../utils/skylane-api';
 

@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { expect } from '@tyson1403/playwright-automation-platform';
 import type { FareCode } from '../utils/test-data';
 
 export class FlightResultsPage {
